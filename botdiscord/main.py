@@ -6,48 +6,14 @@ intents = discord.Intents.all()
 bot = commands.Bot(".", intents=intents)
 
 conexao = sqlite3.connect("Usuarios.db")
-CreateTable = "CREATE TABLE IF NOT EXISTS usuarios (user_id INTEGER PRIMARY KEY, senha TEXT, nome_personagem TEXT)"
+CreateTable = "CREATE TABLE IF NOT EXISTS usuarios (user_id INTEGER PRIMARY KEY, senha TEXT, user_name TEXT)"
 cursor = conexao.cursor()
 cursor.execute(CreateTable)
+conexao = sqlite3.connect("Personagem.db")
+CreateTable2 = "CREATE TABLE IF NOT EXISTS personagem (user_id INTEGER PRIMARY KEY, faccão TEXT, raca TEXT, classe TEXT, nome TEXT, zona_inicial TEXT, nivel INTEGER, COINS INTEGER)"
+cursor = conexao.cursor()
+cursor.execute(CreateTable2)
 
-class RegistroModal(discord.ui.Modal, title="Registro"):
-    user = discord.ui.TextInput(label="ID do usuário", style=discord.TextStyle.short)
-    senha = discord.ui.TextInput(label="Digite a senha", style=discord.TextStyle.short, min_length=6)
-    Personagem= discord.ui.TextInput(label="Digite o nome do seu personagem", style=discord.TextStyle.short)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        user_id = self.user.value
-        senha = self.senha.value
-        nome_personagem = self.Personagem.value
-
-        cursor.execute("INSERT INTO usuarios (user_id, senha, nome_personagem) VALUES (?, ?, ?)", (user_id, senha, nome_personagem))
-        conexao.commit()
-
-        await interaction.response.send_message(f"Registro concluído! User: {user_id}, Personagem: {nome_personagem}")
-class LoginModal(discord.ui.Modal, title="login"):
-    nome_personagem = discord.ui.TextInput(label="Digite o nome do seu personagem", style=discord.TextStyle.short)
-    senha = discord.ui.TextInput(label="Digite a senha", style=discord.TextStyle.short, min_length=6)
-    async def on_submit(self, interaction: discord.Interaction):
-        nome_personagem = self.nome_personagem.value
-        senha = self.senha.value
-
-        cursor.execute("SELECT user_id FROM usuarios WHERE nome_personagem = ? AND senha = ?", (nome_personagem, senha))
-        result = cursor.fetchone()
-        if result:
-            user_id = result[0]
-            await interaction.response.send_message(f"Login bem-sucedido! User ID: {user_id}, Personagem: {nome_personagem}")
-        else:
-            await interaction.response.send_message("Login falhou! Verifique seu nome de personagem e senha.")
-
-class MeuBotao(discord.ui.View):
-    @discord.ui.button(label="Registrar", style=discord.ButtonStyle.primary)
-    async def Register(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = RegistroModal()
-        await interaction.response.send_modal(modal) 
-    @discord.ui.button(label="Login", style=discord.ButtonStyle.secondary)
-    async def Login(self, interaction: discord.Interaction, button: discord.ui.Button):
-        modal = LoginModal()
-        await interaction.response.send_modal(modal)  
 
 class CriarouDeletarseção(discord.ui.View):
     def __init__(self):
@@ -85,7 +51,7 @@ class CriarouDeletarseção(discord.ui.View):
         )
 
         # Embed de boas-vindas dentro do canal novo
-        embed_welcome = discord.Embed(title="⚔️ Sua Jornada Começa!", description="Bem-vindo ao seu canal privado.", color=0x00ff00)
+        embed_welcome = discord.Embed(title="⚔️ Sua Jornada Começa!", description="Bem-vindo ao seu canal privado. Digite iniciar para começar sua jornada! digite .menu pra iniciar", color=0x00ff00)
         await canal.send(content=member.mention, embed=embed_welcome)
 
         await interaction.response.send_message(f"Seção criada com sucesso! Acesse: {canal.mention}", ephemeral=True)
@@ -109,7 +75,7 @@ class CriarouDeletarseção(discord.ui.View):
             await interaction.response.send_message("Nenhuma categoria de seções encontrada.", ephemeral=True)
 
 @bot.event
-async def on_ready(): # Removi o 'ctx' pois on_ready não recebe argumentos
+async def on_ready(): 
     print(f"Bot conectado como {bot.user}")
     
     # Isso faz com que os botões continuem funcionando mesmo se o bot reiniciar
@@ -124,6 +90,49 @@ async def on_ready(): # Removi o 'ctx' pois on_ready não recebe argumentos
         )
         # Nota: Idealmente você envia isso apenas uma vez, ou limpa o canal antes.
         await channel.send(embed=embed, view=CriarouDeletarseção())
+
+
+#Criação de personagem
+
+
+class criar_personagem_modal(discord.ui.Modal, title="Criar Personagem"):
+    embed_criar = discord.Embed(
+        title="Escolha a facção do seu personagem",
+        color=0x00ff00
+    )
+    @discord.ui.button(label="Horda", style=discord.ButtonStyle.danger, custom_id="horda_btn")
+    async def horda_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pass
+    @discord.ui.button(label="Aliança", style=discord.ButtonStyle.primary, custom_id="alianca_btn")
+    async def alianca_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pass
+
+class CriarPersonagem(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    @discord.ui.button(label="Criar Personagem", style=discord.ButtonStyle.primary, custom_id="criar_personagem_btn")
+    async def criar_personagem(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pass
+        await interaction.response.send_modal(criar_personagem_modal())
+    
+    @discord.ui.button(label="Logar Personagem", style=discord.ButtonStyle.secondary, custom_id="logar_personagem_btn")
+    async def logar_personagem(self, interaction: discord.Interaction, button: discord.ui.Button):
+        pass
+        
+
+
+
+
+
+@bot.command()
+async def menu(ctx:commands.Context):
+    embed_criar_logar = discord.Embed(
+        title="⚔️ Bem-vindo ao Mundo de Azeroth", 
+        description="Primeiro, escolha entre jogar com um personagem existente ou criar um novo. Use os comandos abaixo para prosseguir:\n\n",
+        color=0x00ff00
+    )
+
+    await ctx.send(embed=embed_criar_logar, view=CriarPersonagem())
    
 
-bot.run("MTQ4MTYyOTk4Mjg3ODA3NzEyMQ.GJ6jaL.He5GRoBOoLU_0mJ45PzR-SHMcAYAKYr8vHw7Kw")
+bot.run("MTQ4MTYyOTk4Mjg3ODA3NzEyMQ.GgDULG.n4Ai4mDfxKY3ot72OLOHNV8KX6AVXtaEpz-7yk")
